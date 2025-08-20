@@ -14,7 +14,14 @@
         }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #add-price-form { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        
+        /* ===== CORRECCIÓN DEL FORMULARIO ===== */
+        #add-price-form {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+
         .action-btn { transition: all 0.2s ease-in-out; }
         .action-btn:disabled { background-color: #9ca3af; cursor: not-allowed; opacity: 0.7; }
         .form-open-btn {
@@ -48,19 +55,22 @@
                 </button>
             </div>
             <div id="form-container" class="bg-white rounded-xl shadow-sm border border-gray-200">
-                <form id="add-price-form" class="p-6 space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <input type="text" name="Producto" placeholder="Nombre del Producto" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <input type="text" name="Marca" placeholder="Marca" class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <!-- ===== ESTRUCTURA DEL FORMULARIO CORREGIDA ===== -->
+                <form id="add-price-form">
+                    <div class="p-6 space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="text" name="Producto" placeholder="Nombre del Producto" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <input type="text" name="Marca" placeholder="Marca" class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <input type="number" name="Precio" placeholder="Precio (ej: 25.50)" step="0.01" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <input type="number" name="Cantidad" placeholder="Cantidad (ej: 1)" step="any" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <input type="text" name="Unidad" placeholder="Unidad (kg, L, pza)" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <input type="text" name="Tienda" placeholder="Nombre de la Tienda" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <div id="form-feedback" class="text-center font-semibold h-6"></div>
+                        <button type="submit" id="submit-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Guardar Precio</button>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <input type="number" name="Precio" placeholder="Precio (ej: 25.50)" step="0.01" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <input type="number" name="Cantidad" placeholder="Cantidad (ej: 1)" step="any" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                        <input type="text" name="Unidad" placeholder="Unidad (kg, L, pza)" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    </div>
-                    <input type="text" name="Tienda" placeholder="Nombre de la Tienda" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                    <div id="form-feedback" class="text-center font-semibold h-6"></div>
-                    <button type="submit" id="submit-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Guardar Precio</button>
                 </form>
             </div>
         </div>
@@ -113,8 +123,7 @@
     </div>
 
     <script>
-        // ▼▼▼ TU NUEVA URL HA SIDO AGREGADA AQUÍ ▼▼▼
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbwIFaR-yWKo9gn0lHnkLwm467E_DuZBdVp0V028ZIzu0zUKhk-dv-PNAeq5P-gLdnVt/exec';
+        const apiUrl = 'https://script.google.com/macros/s/AKfycbxZXDf5Kw14l3ZE7FaMsj-uCJLEuxkCEjjvGBjcvw6un6flT2l86uRPGKkDyV3D3qW9/exec';
         
         let allPrices = []; 
 
@@ -131,7 +140,11 @@
 
         toggleBtn.addEventListener('click', () => {
             toggleBtn.classList.toggle('form-open-btn');
-            form.style.maxHeight = form.style.maxHeight ? null : form.scrollHeight + "px";
+            if (form.style.maxHeight) {
+                form.style.maxHeight = null;
+            } else {
+                form.style.maxHeight = form.scrollHeight + "px";
+            }
         });
 
         form.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(); });
