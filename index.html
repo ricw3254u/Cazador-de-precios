@@ -272,9 +272,7 @@
             const formContent = ui.form.querySelector('div');
             if (ui.form.style.maxHeight) {
                 ui.form.style.maxHeight = null;
-                ui.form.classList.remove('form-open');
             } else {
-                ui.form.classList.add('form-open');
                 ui.form.style.maxHeight = `${formContent.scrollHeight}px`;
             }
         });
