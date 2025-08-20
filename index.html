@@ -17,56 +17,18 @@
         #add-price-form { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
         .action-btn { transition: all 0.2s ease-in-out; }
         .action-btn:disabled { background-color: #9ca3af; cursor: not-allowed; opacity: 0.7; }
-
-        /* Estilo para el botón cuando el formulario está abierto */
         .form-open-btn {
-            background-color: #e0e7ff !important; /* indigo-100 */
-            color: #4338ca !important; /* indigo-700 */
+            background-color: #e0e7ff !important;
+            color: #4338ca !important;
         }
-
-        /* Estilos para la vista de tarjetas en móvil */
         @media (max-width: 768px) {
-            .responsive-table thead {
-                display: none;
-            }
-            .responsive-table tr {
-                display: block;
-                background-color: white;
-                border-radius: 0.5rem;
-                margin-bottom: 1rem;
-                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-                border: 1px solid #e5e7eb;
-            }
-            .responsive-table td {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                padding: 0.75rem 1rem;
-                border-bottom: 1px solid #f3f4f6;
-                text-align: right;
-            }
-            .responsive-table td:last-child {
-                border-bottom: none;
-            }
-            .responsive-table td::before {
-                content: attr(data-label);
-                font-weight: 600;
-                text-align: left;
-                margin-right: 1rem;
-                color: #4b5563;
-            }
-            .responsive-table td.product-cell {
-                padding: 1rem;
-                font-size: 1.125rem;
-                font-weight: 700;
-                background-color: #f9fafb;
-                border-top-left-radius: 0.5rem;
-                border-top-right-radius: 0.5rem;
-                justify-content: center;
-            }
-             .responsive-table td.product-cell::before {
-                display: none;
-            }
+            .responsive-table thead { display: none; }
+            .responsive-table tr { display: block; background-color: white; border-radius: 0.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); border: 1px solid #e5e7eb; }
+            .responsive-table td { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; border-bottom: 1px solid #f3f4f6; text-align: right; }
+            .responsive-table td:last-child { border-bottom: none; }
+            .responsive-table td::before { content: attr(data-label); font-weight: 600; text-align: left; margin-right: 1rem; color: #4b5563; }
+            .responsive-table td.product-cell { padding: 1rem; font-size: 1.125rem; font-weight: 700; background-color: #f9fafb; border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; justify-content: center; }
+            .responsive-table td.product-cell::before { display: none; }
         }
     </style>
 </head>
@@ -78,9 +40,7 @@
             <p class="text-lg text-gray-500 mt-2">Valida y comparte las mejores ofertas de la comunidad.</p>
         </header>
 
-        <!-- FORMULARIO PARA AGREGAR PRECIOS -->
         <div class="mb-10">
-            <!-- Contenedor del botón alineado a la derecha -->
             <div class="flex justify-end mb-4">
                 <button id="toggle-form-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2 shadow-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
@@ -105,6 +65,28 @@
             </div>
         </div>
 
+        <!-- ===== SECCIÓN DE BÚSQUEDA Y FILTROS ===== -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="md:col-span-2">
+                    <input type="text" id="search-input" placeholder="Buscar por producto..." class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <div>
+                    <select id="store-filter" class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Todas las tiendas</option>
+                    </select>
+                </div>
+                <div>
+                    <select id="brand-filter" class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Todas las marcas</option>
+                    </select>
+                </div>
+            </div>
+             <div class="flex justify-end mt-4">
+                <button id="reset-filters-btn" class="text-sm text-indigo-600 hover:underline">Limpiar filtros</button>
+            </div>
+        </div>
+
         <div id="loading" class="flex flex-col items-center justify-center p-10"><div class="loader mb-4"></div><p class="text-gray-600">Cargando precios...</p></div>
         
         <div id="prices-container" class="hidden">
@@ -122,6 +104,7 @@
                 </thead>
                 <tbody id="prices-tbody"></tbody>
             </table>
+             <div id="no-results" class="hidden text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm border"><p>No se encontraron resultados que coincidan con tu búsqueda.</p></div>
         </div>
         
         <footer class="text-center mt-8">
@@ -132,26 +115,34 @@
     <script>
         const apiUrl = 'https://script.google.com/macros/s/AKfycbxZXDf5Kw14l3ZE7FaMsj-uCJLEuxkCEjjvGBjcvw6un6flT2l86uRPGKkDyV3D3qW9/exec';
         
+        let allPrices = []; // Almacenar todos los precios aquí
+
         document.getElementById('debug-link').href = `${apiUrl}?action=debug`;
         const loadingIndicator = document.getElementById('loading');
         const pricesContainer = document.getElementById('prices-container');
         const form = document.getElementById('add-price-form');
         const toggleBtn = document.getElementById('toggle-form-btn');
+        const searchInput = document.getElementById('search-input');
+        const storeFilter = document.getElementById('store-filter');
+        const brandFilter = document.getElementById('brand-filter');
+        const resetBtn = document.getElementById('reset-filters-btn');
+        const noResultsDiv = document.getElementById('no-results');
 
-        // --- Lógica para mostrar/ocultar el formulario ---
         toggleBtn.addEventListener('click', () => {
-            // Alterna la clase para cambiar el estilo del botón
             toggleBtn.classList.toggle('form-open-btn');
-            
-            // Alterna la altura del formulario para mostrarlo u ocultarlo
-            if (form.style.maxHeight) {
-                form.style.maxHeight = null;
-            } else {
-                form.style.maxHeight = form.scrollHeight + "px";
-            }
+            form.style.maxHeight = form.style.maxHeight ? null : form.scrollHeight + "px";
         });
 
         form.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(); });
+        searchInput.addEventListener('input', applyFilters);
+        storeFilter.addEventListener('change', applyFilters);
+        brandFilter.addEventListener('change', applyFilters);
+        resetBtn.addEventListener('click', () => {
+            searchInput.value = '';
+            storeFilter.value = '';
+            brandFilter.value = '';
+            applyFilters();
+        });
 
         function handleFormSubmit() {
             const submitBtn = document.getElementById('submit-btn');
@@ -160,7 +151,7 @@
             submitBtn.textContent = 'Guardando...';
             const data = Object.fromEntries(new FormData(form).entries());
 
-            fetch(apiUrl, { method: 'POST', redirect: 'follow', body: JSON.stringify(data), headers: { "Content-Type": "text/plain;charset=utf-8" }})
+            fetch(apiUrl, { method: 'POST', redirect: 'follow', body: JSON.stringify(data), headers: { "Content-Type": "text-plain;charset=utf-8" }})
             .then(res => {
                 feedbackDiv.textContent = '¡Gracias! Precio agregado. Actualizando...';
                 feedbackDiv.className = 'text-center font-semibold text-green-600';
@@ -178,25 +169,76 @@
         function loadPrices() {
             loadingIndicator.style.display = 'flex';
             pricesContainer.classList.add('hidden');
+            noResultsDiv.classList.add('hidden');
+
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
                     loadingIndicator.style.display = 'none';
                     pricesContainer.classList.remove('hidden');
-                    const tableBody = document.getElementById('prices-tbody');
-                    tableBody.innerHTML = ''; 
                     
                     if (!Array.isArray(data) || data.length === 0) {
                         pricesContainer.innerHTML = '<div class="text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm border"><p>Aún no se han agregado precios. ¡Sé el primero!</p></div>';
                         return;
                     }
                     
-                    const sortedData = data.sort((a, b) => new Date(b.Timestamp) - new Date(a.Timestamp));
-                    sortedData.forEach(item => addPriceToTable(item));
+                    allPrices = data.sort((a, b) => new Date(b.Timestamp) - new Date(a.Timestamp));
+                    populateFilters(allPrices);
+                    applyFilters();
                 })
                 .catch(error => {
                     loadingIndicator.innerHTML = `<div class="text-center text-red-600 p-8 bg-red-50 rounded-lg border border-red-200"><p class="font-bold">❌ Error al cargar los precios.</p><p class="text-sm mt-1">Verifica la conexión del script y los encabezados en la hoja de cálculo.</p></div>`;
                 });
+        }
+
+        function populateFilters(data) {
+            const stores = [...new Set(data.map(item => item.Tienda).filter(Boolean))];
+            const brands = [...new Set(data.map(item => item.Marca).filter(Boolean))];
+
+            storeFilter.innerHTML = '<option value="">Todas las tiendas</option>';
+            stores.sort().forEach(store => {
+                const option = document.createElement('option');
+                option.value = store;
+                option.textContent = store;
+                storeFilter.appendChild(option);
+            });
+
+            brandFilter.innerHTML = '<option value="">Todas las marcas</option>';
+            brands.sort().forEach(brand => {
+                const option = document.createElement('option');
+                option.value = brand;
+                option.textContent = brand;
+                brandFilter.appendChild(option);
+            });
+        }
+
+        function applyFilters() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedStore = storeFilter.value;
+            const selectedBrand = brandFilter.value;
+
+            const filteredData = allPrices.filter(item => {
+                const productMatch = item.Producto ? item.Producto.toLowerCase().includes(searchTerm) : false;
+                const storeMatch = !selectedStore || item.Tienda === selectedStore;
+                const brandMatch = !selectedBrand || item.Marca === selectedBrand;
+                return productMatch && storeMatch && brandMatch;
+            });
+
+            displayPrices(filteredData);
+        }
+
+        function displayPrices(data) {
+            const tableBody = document.getElementById('prices-tbody');
+            tableBody.innerHTML = '';
+
+            if (data.length === 0) {
+                noResultsDiv.classList.remove('hidden');
+                pricesContainer.classList.add('hidden');
+            } else {
+                noResultsDiv.classList.add('hidden');
+                pricesContainer.classList.remove('hidden');
+                data.forEach(item => addPriceToTable(item));
+            }
         }
         
         function addPriceToTable(item) {
@@ -209,7 +251,6 @@
 
             const productInfo = `${item.Producto || 'N/A'} (${item.Cantidad || ''} ${item.Unidad || ''})`;
             
-            // --- Celdas para la vista de tarjetas en móvil (ORDEN CORREGIDO) ---
             const mobileRowHTML = `
                 <td data-label="Producto" class="product-cell text-gray-900">${productInfo}</td>
                 <td data-label="Fecha">${formatDate(item.Timestamp)}</td>
@@ -220,7 +261,6 @@
                 <td data-label="Veracidad"></td>
             `;
             
-            // --- Celdas para la vista de escritorio (ORDEN CORREGIDO) ---
             const desktopRowHTML = `
                 <td class="px-6 py-4">${formatDate(item.Timestamp)}</td>
                 <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${productInfo}</td>
@@ -231,7 +271,6 @@
                 <td></td>
             `;
 
-            // Se usa innerHTML para crear las celdas y luego se añaden los listeners
             if (window.innerWidth <= 768) {
                 row.innerHTML = mobileRowHTML;
             } else {
@@ -244,9 +283,7 @@
 
         function formatDate(timestamp) {
             const date = new Date(timestamp);
-            return isNaN(date) 
-                ? 'Fecha inválida' 
-                : date.toLocaleDateString();
+            return isNaN(date) ? 'Fecha inválida' : date.toLocaleDateString();
         }
 
         function formatPrice(price) {
@@ -309,8 +346,7 @@
             cell.appendChild(container);
         }
 
-        // --- Iniciar la aplicación y manejar el redimensionamiento ---
-        window.addEventListener('resize', loadPrices);
+        window.addEventListener('resize', () => displayPrices(allPrices));
         loadPrices();
     </script>
 
