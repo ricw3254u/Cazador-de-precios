@@ -113,9 +113,10 @@
     </div>
 
     <script>
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbxZXDf5Kw14l3ZE7FaMsj-uCJLEuxkCEjjvGBjcvw6un6flT2l86uRPGKkDyV3D3qW9/exec';
+        // ▼▼▼ TU NUEVA URL HA SIDO AGREGADA AQUÍ ▼▼▼
+        const apiUrl = 'https://script.google.com/macros/s/AKfycbwIFaR-yWKo9gn0lHnkLwm467E_DuZBdVp0V028ZIzu0zUKhk-dv-PNAeq5P-gLdnVt/exec';
         
-        let allPrices = []; // Almacenar todos los precios aquí
+        let allPrices = []; 
 
         document.getElementById('debug-link').href = `${apiUrl}?action=debug`;
         const loadingIndicator = document.getElementById('loading');
@@ -151,18 +152,22 @@
             submitBtn.textContent = 'Guardando...';
             const data = Object.fromEntries(new FormData(form).entries());
 
-            fetch(apiUrl, { method: 'POST', redirect: 'follow', body: JSON.stringify(data), headers: { "Content-Type": "text-plain;charset=utf-8" }})
+            fetch(apiUrl, { method: 'POST', redirect: 'follow', body: JSON.stringify(data), headers: { "Content-Type": "text/plain;charset=utf-8" }})
             .then(res => {
                 feedbackDiv.textContent = '¡Gracias! Precio agregado. Actualizando...';
                 feedbackDiv.className = 'text-center font-semibold text-green-600';
                 form.reset();
                 loadPrices(); 
             })
-            .catch(err => { feedbackDiv.textContent = `Error: ${err.message}`; feedbackDiv.className = 'text-center font-semibold text-red-600'; })
+            .catch(err => { 
+                console.error("Error al enviar el formulario:", err);
+                feedbackDiv.textContent = `Error de conexión. Asegúrate de haber re-implementado el script.`; 
+                feedbackDiv.className = 'text-center font-semibold text-red-600'; 
+            })
             .finally(() => {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Guardar Precio';
-                setTimeout(() => { feedbackDiv.textContent = ''; }, 4000);
+                setTimeout(() => { feedbackDiv.textContent = ''; }, 5000);
             });
         }
 
