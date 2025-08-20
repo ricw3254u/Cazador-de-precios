@@ -52,7 +52,6 @@
                     <div class="p-6 space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="text" name="Producto" placeholder="Nombre del Producto" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <!-- ===== CAMPO DE MARCA AHORA ES UN SELECT ===== -->
                             <select name="Marca" id="form-brand-select" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                                 <option value="">Seleccionar marca...</option>
                             </select>
@@ -62,7 +61,6 @@
                             <input type="number" name="Cantidad" placeholder="Cantidad (ej: 1)" step="any" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <input type="text" name="Unidad" placeholder="Unidad (kg, L, pza)" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
-                        <!-- ===== CAMPO DE TIENDA AHORA ES UN SELECT ===== -->
                         <select name="Tienda" id="form-store-select" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="">Seleccionar tienda...</option>
                         </select>
@@ -194,12 +192,20 @@
                     loadingIndicator.style.display = 'none';
                     pricesContainer.classList.remove('hidden');
                     
-                    if (!Array.isArray(data) || data.length === 0) {
+                    if (!Array.isArray(data)) {
+                        pricesContainer.innerHTML = '<div class="text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm border"><p>Error al cargar los datos.</p></div>';
+                        return;
+                    }
+                    
+                    // ===== FILTRO PARA ELIMINAR FILAS SIN NOMBRE DE PRODUCTO =====
+                    const validData = data.filter(item => item.Producto && item.Producto.trim() !== '');
+
+                    if (validData.length === 0) {
                         pricesContainer.innerHTML = '<div class="text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm border"><p>Aún no se han agregado precios. ¡Sé el primero!</p></div>';
                         return;
                     }
                     
-                    allPrices = data.sort((a, b) => new Date(b.Timestamp) - new Date(a.Timestamp));
+                    allPrices = validData.sort((a, b) => new Date(b.Timestamp) - new Date(a.Timestamp));
                     populateDropdowns(allPrices);
                     applyFilters();
                 })
@@ -208,19 +214,16 @@
                 });
         }
 
-        // ===== FUNCIÓN MEJORADA PARA POBLAR TODOS LOS DROPDOWNS =====
         function populateDropdowns(data) {
             const stores = [...new Set(data.map(item => item.Tienda).filter(Boolean))].sort();
             const brands = [...new Set(data.map(item => item.Marca).filter(Boolean))].sort();
 
-            // Limpiar y poblar filtros
             storeFilter.innerHTML = '<option value="">Todas las tiendas</option>';
             stores.forEach(store => storeFilter.add(new Option(store, store)));
 
             brandFilter.innerHTML = '<option value="">Todas las marcas</option>';
             brands.forEach(brand => brandFilter.add(new Option(brand, brand)));
 
-            // Limpiar y poblar selects del formulario
             formStoreSelect.innerHTML = '<option value="">Seleccionar tienda...</option>';
             stores.forEach(store => formStoreSelect.add(new Option(store, store)));
             
