@@ -5,44 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cazador de Precios</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #add-price-form { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
         .action-btn { transition: all 0.2s ease-in-out; }
         .action-btn:disabled { background-color: #9ca3af; cursor: not-allowed; opacity: 0.7; }
+
+        /* Estilo para el botón cuando el formulario está abierto */
+        .form-open-btn {
+            background-color: #e0e7ff !important; /* indigo-100 */
+            color: #4338ca !important; /* indigo-700 */
+        }
+
+        /* Estilos para la vista de tarjetas en móvil */
+        @media (max-width: 768px) {
+            .responsive-table thead {
+                display: none;
+            }
+            .responsive-table tr {
+                display: block;
+                background-color: white;
+                border-radius: 0.5rem;
+                margin-bottom: 1rem;
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+                border: 1px solid #e5e7eb;
+            }
+            .responsive-table td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.75rem 1rem;
+                border-bottom: 1px solid #f3f4f6;
+                text-align: right;
+            }
+            .responsive-table td:last-child {
+                border-bottom: none;
+            }
+            .responsive-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                text-align: left;
+                margin-right: 1rem;
+                color: #4b5563;
+            }
+            .responsive-table td.product-cell {
+                padding: 1rem;
+                font-size: 1.125rem;
+                font-weight: 700;
+                background-color: #f9fafb;
+                border-top-left-radius: 0.5rem;
+                border-top-right-radius: 0.5rem;
+                justify-content: center;
+            }
+             .responsive-table td.product-cell::before {
+                display: none;
+            }
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans">
+<body class="bg-gray-50 text-gray-800">
 
-    <div class="container mx-auto p-4 md:p-8">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-900">Cazador de Precios 🛒</h1>
-            <p class="text-lg text-gray-600 mt-2">Valida las ofertas reportadas por la comunidad.</p>
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl md:text-5xl font-bold text-indigo-600">Cazador de Precios</h1>
+            <p class="text-lg text-gray-500 mt-2">Valida y comparte las mejores ofertas de la comunidad.</p>
         </header>
 
         <!-- FORMULARIO PARA AGREGAR PRECIOS -->
-        <div class="bg-white rounded-lg shadow-md p-6 mb-8 max-w-2xl mx-auto">
-            <button id="toggle-form-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
-                + Agregar un Nuevo Precio
-            </button>
-            <form id="add-price-form" class="mt-4 space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input type="text" name="Producto" placeholder="Nombre del Producto" required class="p-2 border rounded w-full"><input type="text" name="Marca" placeholder="Marca" class="p-2 border rounded w-full"></div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><input type="number" name="Precio" placeholder="Precio (ej: 25.50)" step="0.01" required class="p-2 border rounded w-full"><input type="number" name="Cantidad" placeholder="Cantidad (ej: 1)" step="any" required class="p-2 border rounded w-full"><input type="text" name="Unidad" placeholder="Unidad (kg, L, pza)" required class="p-2 border rounded w-full"></div>
-                <input type="text" name="Tienda" placeholder="Nombre de la Tienda" required class="p-2 border rounded w-full">
-                <div id="form-feedback" class="text-center font-semibold"></div>
-                <button type="submit" id="submit-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg">Guardar Precio</button>
-            </form>
+        <div class="mb-10">
+            <!-- Contenedor del botón alineado a la derecha -->
+            <div class="flex justify-end mb-4">
+                <button id="toggle-form-btn" class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 flex items-center justify-center space-x-2 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                    <span>Agregar Precio</span>
+                </button>
+            </div>
+            <div id="form-container" class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <form id="add-price-form" class="p-6 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="text" name="Producto" placeholder="Nombre del Producto" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <input type="text" name="Marca" placeholder="Marca" class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <input type="number" name="Precio" placeholder="Precio (ej: 25.50)" step="0.01" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <input type="number" name="Cantidad" placeholder="Cantidad (ej: 1)" step="any" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <input type="text" name="Unidad" placeholder="Unidad (kg, L, pza)" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <input type="text" name="Tienda" placeholder="Nombre de la Tienda" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                    <div id="form-feedback" class="text-center font-semibold h-6"></div>
+                    <button type="submit" id="submit-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Guardar Precio</button>
+                </form>
+            </div>
         </div>
 
-        <div id="loading" class="flex flex-col items-center justify-center p-10"><div class="loader mb-4"></div><p>Cargando precios...</p></div>
+        <div id="loading" class="flex flex-col items-center justify-center p-10"><div class="loader mb-4"></div><p class="text-gray-600">Cargando precios...</p></div>
         
-        <div id="prices-container" class="hidden bg-white rounded-lg shadow-md overflow-x-auto">
-            <table class="w-full text-sm text-left text-gray-500">
-                <!-- ===== ENCABEZADOS DE TABLA CORREGIDOS ===== -->
-                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+        <div id="prices-container" class="hidden">
+            <table class="w-full text-sm text-left text-gray-500 responsive-table">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-100 rounded-t-lg">
                     <tr>
-                        <th scope="col" class="px-6 py-3">Fecha y Hora</th>
+                        <th scope="col" class="px-6 py-3">Fecha</th>
                         <th scope="col" class="px-6 py-3">Producto</th>
                         <th scope="col" class="px-6 py-3">Marca</th>
                         <th scope="col" class="px-6 py-3">Tienda</th>
@@ -55,24 +124,33 @@
             </table>
         </div>
         
-        <!-- HERRAMIENTA DE DIAGNÓSTICO -->
         <footer class="text-center mt-8">
-            <p class="text-sm text-gray-500">¿Problemas? <a id="debug-link" href="#" target="_blank" class="text-blue-500 hover:underline">Verificar Conexión del Script</a></p>
+            <p class="text-sm text-gray-500">¿Problemas? <a id="debug-link" href="#" target="_blank" class="text-indigo-500 hover:underline">Verificar Conexión del Script</a></p>
         </footer>
     </div>
 
     <script>
         const apiUrl = 'https://script.google.com/macros/s/AKfycbxZXDf5Kw14l3ZE7FaMsj-uCJLEuxkCEjjvGBjcvw6un6flT2l86uRPGKkDyV3D3qW9/exec';
         
-        // --- Configuración de elementos ---
         document.getElementById('debug-link').href = `${apiUrl}?action=debug`;
         const loadingIndicator = document.getElementById('loading');
         const pricesContainer = document.getElementById('prices-container');
         const form = document.getElementById('add-price-form');
         const toggleBtn = document.getElementById('toggle-form-btn');
 
-        // --- Lógica del formulario ---
-        toggleBtn.addEventListener('click', () => { form.style.maxHeight = form.style.maxHeight ? null : form.scrollHeight + "px"; });
+        // --- Lógica para mostrar/ocultar el formulario ---
+        toggleBtn.addEventListener('click', () => {
+            // Alterna la clase para cambiar el estilo del botón
+            toggleBtn.classList.toggle('form-open-btn');
+            
+            // Alterna la altura del formulario para mostrarlo u ocultarlo
+            if (form.style.maxHeight) {
+                form.style.maxHeight = null;
+            } else {
+                form.style.maxHeight = form.scrollHeight + "px";
+            }
+        });
+
         form.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(); });
 
         function handleFormSubmit() {
@@ -85,11 +163,11 @@
             fetch(apiUrl, { method: 'POST', redirect: 'follow', body: JSON.stringify(data), headers: { "Content-Type": "text/plain;charset=utf-8" }})
             .then(res => {
                 feedbackDiv.textContent = '¡Gracias! Precio agregado. Actualizando...';
-                feedbackDiv.className = 'text-green-600';
+                feedbackDiv.className = 'text-center font-semibold text-green-600';
                 form.reset();
                 loadPrices(); 
             })
-            .catch(err => { feedbackDiv.textContent = `Error: ${err.message}`; feedbackDiv.className = 'text-red-600'; })
+            .catch(err => { feedbackDiv.textContent = `Error: ${err.message}`; feedbackDiv.className = 'text-center font-semibold text-red-600'; })
             .finally(() => {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Guardar Precio';
@@ -97,7 +175,6 @@
             });
         }
 
-        // --- Lógica para cargar y mostrar precios ---
         function loadPrices() {
             loadingIndicator.style.display = 'flex';
             pricesContainer.classList.add('hidden');
@@ -110,7 +187,7 @@
                     tableBody.innerHTML = ''; 
                     
                     if (!Array.isArray(data) || data.length === 0) {
-                        pricesContainer.innerHTML = '<p class="text-center text-gray-600 p-8">Aún no se han agregado precios. ¡Sé el primero!</p>';
+                        pricesContainer.innerHTML = '<div class="text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm border"><p>Aún no se han agregado precios. ¡Sé el primero!</p></div>';
                         return;
                     }
                     
@@ -118,7 +195,7 @@
                     sortedData.forEach(item => addPriceToTable(item));
                 })
                 .catch(error => {
-                    loadingIndicator.innerHTML = `<p class="text-red-600 font-bold">❌ Error al cargar los precios.</p><p class="text-gray-600 mt-2">Verifica la conexión del script y los encabezados en la hoja de cálculo.</p>`;
+                    loadingIndicator.innerHTML = `<div class="text-center text-red-600 p-8 bg-red-50 rounded-lg border border-red-200"><p class="font-bold">❌ Error al cargar los precios.</p><p class="text-sm mt-1">Verifica la conexión del script y los encabezados en la hoja de cálculo.</p></div>`;
                 });
         }
         
@@ -130,56 +207,73 @@
             row.className = 'bg-white border-b hover:bg-gray-50';
             row.id = `row-${item.rowNum}`;
 
-            // --- LÓGICA DE CELDAS CORREGIDA ---
-            
-            // 1. Celda de Fecha y Hora (Timestamp)
-            const date = new Date(item.Timestamp);
-            const formattedDateTime = isNaN(date) 
-                ? 'Fecha inválida' 
-                : `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-            row.insertCell().textContent = formattedDateTime;
-
-            // 2. Celda de Producto (con Cantidad y Unidad)
             const productInfo = `${item.Producto || 'N/A'} (${item.Cantidad || ''} ${item.Unidad || ''})`;
-            row.insertCell().outerHTML = `<th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${productInfo}</th>`;
             
-            // 3. Celda de Marca
-            row.insertCell().textContent = item.Marca || 'N/A';
-
-            // 4. Celda de Tienda
-            row.insertCell().textContent = item.Tienda || 'N/A';
+            // --- Celdas para la vista de tarjetas en móvil (ORDEN CORREGIDO) ---
+            const mobileRowHTML = `
+                <td data-label="Producto" class="product-cell text-gray-900">${productInfo}</td>
+                <td data-label="Fecha">${formatDate(item.Timestamp)}</td>
+                <td data-label="Marca">${item.Marca || 'N/A'}</td>
+                <td data-label="Tienda">${item.Tienda || 'N/A'}</td>
+                <td data-label="Precio" class="text-right font-semibold text-lg text-gray-800">${formatPrice(item.Precio)}</td>
+                <td data-label="Calidad Oferta"></td>
+                <td data-label="Veracidad"></td>
+            `;
             
-            // 5. Celda de Precio
-            const price = Number(item.Precio);
-            const priceCell = row.insertCell();
-            priceCell.className = 'px-6 py-4 text-right font-semibold';
-            priceCell.textContent = isNaN(price) ? 'Inválido' : `$${price.toFixed(2)}`;
+            // --- Celdas para la vista de escritorio (ORDEN CORREGIDO) ---
+            const desktopRowHTML = `
+                <td class="px-6 py-4">${formatDate(item.Timestamp)}</td>
+                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${productInfo}</td>
+                <td class="px-6 py-4">${item.Marca || 'N/A'}</td>
+                <td class="px-6 py-4">${item.Tienda || 'N/A'}</td>
+                <td class="px-6 py-4 text-right font-semibold text-gray-800">${formatPrice(item.Precio)}</td>
+                <td></td>
+                <td></td>
+            `;
 
-            // 6. Celda de Calidad de Oferta
-            const offerCell = row.insertCell();
-            offerCell.className = 'px-6 py-4 text-center';
-            createVotingUI(offerCell, item, 'Oferta', 'rateGood', 'rateBad', '👍', '👎');
-
-            // 7. Celda de Veracidad
-            const realityCell = row.insertCell();
-            realityCell.className = 'px-6 py-4 text-center';
-            createVotingUI(realityCell, item, 'Realidad', 'validateReal', 'validateFake', '✅', '❌');
+            // Se usa innerHTML para crear las celdas y luego se añaden los listeners
+            if (window.innerWidth <= 768) {
+                row.innerHTML = mobileRowHTML;
+            } else {
+                row.innerHTML = desktopRowHTML;
+            }
+            
+            createVotingUI(row.cells[5], item, 'Oferta', 'rateGood', 'rateBad');
+            createVotingUI(row.cells[6], item, 'Realidad', 'validateReal', 'validateFake');
         }
 
-        function createVotingUI(cell, item, scoreType, actionUp, actionDown, labelUp, labelDown) {
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return isNaN(date) 
+                ? 'Fecha inválida' 
+                : date.toLocaleDateString();
+        }
+
+        function formatPrice(price) {
+            const priceNum = Number(price);
+            return isNaN(priceNum) ? 'Inválido' : `$${priceNum.toFixed(2)}`;
+        }
+
+        function createVotingUI(cell, item, scoreType, actionUp, actionDown) {
+            cell.className = 'text-center px-6 py-4';
+            const container = document.createElement('div');
+            container.className = 'flex items-center justify-end md:justify-center';
+
             const scoreSpan = document.createElement('span');
-            scoreSpan.className = 'font-bold text-lg mr-2';
+            scoreSpan.className = 'font-bold text-lg w-8';
+            
             const btnUp = document.createElement('button');
-            btnUp.textContent = labelUp;
-            btnUp.className = 'action-btn bg-green-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-green-600';
+            btnUp.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" /></svg>`;
+            btnUp.className = 'action-btn bg-green-100 text-green-600 p-1 rounded-full hover:bg-green-200';
+            
             const btnDown = document.createElement('button');
-            btnDown.textContent = labelDown;
-            btnDown.className = 'action-btn bg-red-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-red-600 ml-1';
+            btnDown.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" /></svg>`;
+            btnDown.className = 'action-btn bg-red-100 text-red-600 p-1 rounded-full hover:bg-red-200 ml-2';
 
             function updateScore(span, score) {
                 span.textContent = score;
-                span.classList.remove('text-blue-600', 'text-red-600', 'text-gray-600');
-                if (score > 0) span.classList.add('text-blue-600');
+                span.classList.remove('text-indigo-600', 'text-red-600', 'text-gray-600');
+                if (score > 0) span.classList.add('text-indigo-600');
                 else if (score < 0) span.classList.add('text-red-600');
                 else span.classList.add('text-gray-600');
             }
@@ -197,24 +291,26 @@
                     } else if (result.status === 'success') {
                         updateScore(scoreSpan, result.newCount);
                     }
-                    btnUp.disabled = false;
-                    btnDown.disabled = false;
                 })
                 .catch(err => {
+                    alert("Error al votar. Asegúrate de haber implementado la última versión del script.");
+                })
+                .finally(() => {
                     btnUp.disabled = false;
                     btnDown.disabled = false;
-                    alert("Error al votar. Asegúrate de haber implementado la última versión del script.");
                 });
             }
             btnUp.onclick = () => handleVote(actionUp);
             btnDown.onclick = () => handleVote(actionDown);
             
-            cell.appendChild(scoreSpan);
-            cell.appendChild(btnUp);
-            cell.appendChild(btnDown);
+            container.appendChild(btnDown);
+            container.appendChild(scoreSpan);
+            container.appendChild(btnUp);
+            cell.appendChild(container);
         }
 
-        // --- Iniciar la aplicación ---
+        // --- Iniciar la aplicación y manejar el redimensionamiento ---
+        window.addEventListener('resize', loadPrices);
         loadPrices();
     </script>
 
