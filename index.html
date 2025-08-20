@@ -16,7 +16,8 @@
         }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #add-price-form { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        #add-price-form { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out, padding 0.5s ease-in-out; }
+        #add-price-form.form-open { padding: 1.5rem; }
         .action-btn { transition: all 0.2s ease-in-out; }
         .action-btn:disabled { background-color: #e5e7eb; cursor: not-allowed; opacity: 0.7; color: #6b7280; }
         .form-open-btn {
@@ -35,6 +36,8 @@
             overflow-x: hidden;
             overflow-y: auto;
         }
+        .other-input { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out, margin-top 0.3s ease-in-out; }
+        .other-input.visible { max-height: 100px; margin-top: 0.5rem; }
         @media (max-width: 768px) {
             .responsive-table thead { display: none; }
             .responsive-table tr { display: block; background-color: white; border-radius: 0.5rem; margin-bottom: 1rem; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06); border: 1px solid #e5e7eb; }
@@ -66,21 +69,30 @@
             </div>
             <div id="form-container" class="bg-white rounded-xl shadow-sm border border-gray-200">
                 <form id="add-price-form">
-                    <div class="p-6 space-y-4">
+                    <div class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" name="Producto" placeholder="Nombre del Producto" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <select name="Marca" id="form-brand-select" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                                <option value="">Seleccionar marca...</option>
-                            </select>
+                            <input type="text" name="Producto" placeholder="Nombre del Producto" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" list="product-suggestions">
+                            <datalist id="product-suggestions"></datalist>
+                            <div>
+                                <select name="Marca" id="form-brand-select" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">Seleccionar marca...</option>
+                                    <option value="other">Otra (especificar)...</option>
+                                </select>
+                                <input type="text" id="new-brand-input" placeholder="Escribe la nueva marca" class="other-input p-3 border border-gray-300 rounded-md w-full">
+                            </div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <input type="number" name="Precio" placeholder="Precio (ej: 25.50)" step="0.01" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <input type="number" name="Cantidad" placeholder="Cantidad (ej: 1)" step="any" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <input type="text" name="Unidad" placeholder="Unidad (kg, L, pza)" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
-                        <select name="Tienda" id="form-store-select" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Seleccionar tienda...</option>
-                        </select>
+                        <div>
+                            <select name="Tienda" id="form-store-select" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Seleccionar tienda...</option>
+                                <option value="other">Otra (especificar)...</option>
+                            </select>
+                            <input type="text" id="new-store-input" placeholder="Escribe la nueva tienda" class="other-input p-3 border border-gray-300 rounded-md w-full">
+                        </div>
                         <div id="form-feedback" class="text-center font-semibold h-6"></div>
                         <button type="submit" id="submit-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Guardar Precio</button>
                     </div>
@@ -124,7 +136,7 @@
                         <th scope="col" class="px-6 py-3 text-right">Precio/Unidad</th>
                         <th scope="col" class="px-6 py-3 text-center">Calidad Oferta</th>
                         <th scope="col" class="px-6 py-3 text-center">Veracidad</th>
-                        <th scope="col" class="px-6 py-3 text-center">Historial</th>
+                        <th scope="col" class="px-6 py-3 text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="prices-tbody"></tbody>
@@ -147,105 +159,141 @@
         </footer>
     </div>
 
-    <!-- ===== MODAL PARA HISTORIAL DE PRECIOS ===== -->
+    <!-- ===== MODALES ===== -->
     <div id="history-modal" class="modal fixed w-full h-full top-0 left-0 flex items-center justify-center hidden">
         <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
         <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-lg shadow-lg z-50 overflow-y-auto">
             <div class="modal-content py-4 text-left px-6">
                 <div class="flex justify-between items-center pb-3">
                     <p id="modal-title" class="text-2xl font-bold text-gray-800"></p>
-                    <button id="modal-close" class="modal-close-btn cursor-pointer z-50">
-                        <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                            <path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path>
-                        </svg>
+                    <button class="modal-close-btn cursor-pointer z-50">
+                        <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg>
                     </button>
                 </div>
-                <div>
-                    <canvas id="price-chart"></canvas>
+                <div><canvas id="price-chart"></canvas></div>
+                <div class="mt-4"><h3 class="font-semibold text-lg">Registros:</h3><ul id="history-list" class="mt-2 text-sm max-h-40 overflow-y-auto"></ul></div>
+            </div>
+        </div>
+    </div>
+    <div id="comments-modal" class="modal fixed w-full h-full top-0 left-0 flex items-center justify-center hidden">
+        <div class="modal-overlay absolute w-full h-full bg-gray-900 opacity-50"></div>
+        <div class="modal-container bg-white w-11/12 md:max-w-2xl mx-auto rounded-lg shadow-lg z-50 overflow-y-auto">
+            <div class="modal-content py-4 text-left px-6">
+                <div class="flex justify-between items-center pb-3">
+                    <p id="comments-modal-title" class="text-2xl font-bold text-gray-800"></p>
+                    <button class="modal-close-btn cursor-pointer z-50">
+                        <svg class="fill-current text-black" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><path d="M14.53 4.53l-1.06-1.06L9 7.94 4.53 3.47 3.47 4.53 7.94 9l-4.47 4.47 1.06 1.06L9 10.06l4.47 4.47 1.06-1.06L10.06 9z"></path></svg>
+                    </button>
                 </div>
-                <div class="mt-4">
-                    <h3 class="font-semibold text-lg">Registros:</h3>
-                    <ul id="history-list" class="mt-2 text-sm max-h-40 overflow-y-auto"></ul>
-                </div>
+                <div id="comments-list" class="mt-2 text-sm max-h-40 overflow-y-auto mb-4"></div>
+                <form id="comment-form" class="mt-4">
+                    <textarea id="comment-text" placeholder="Escribe tu comentario..." required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                    <button type="submit" class="w-full mt-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition">Enviar Comentario</button>
+                </form>
             </div>
         </div>
     </div>
 
     <script>
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbxZXDf5Kw14l3ZE7FaMsj-uCJLEuxkCEjjvGBjcvw6un6flT2l86uRPGKkDyV3D3qW9/exec';
+        const apiUrl = 'https://script.google.com/macros/s/AKfycbxL_zLlHFJqplaj67_M1VpiFqlNJGBYqlTj7mU_DUUt-f3szd3J7hZsazY3E6VNK3NF/exec';
         
         let allPrices = [];
+        let allComments = {};
         let currentPage = 1;
         const itemsPerPage = 20;
         let priceChartInstance = null;
 
-        document.getElementById('debug-link').href = `${apiUrl}?action=debug`;
-        const loadingIndicator = document.getElementById('loading');
-        const pricesContainer = document.getElementById('prices-container');
-        const form = document.getElementById('add-price-form');
-        const toggleBtn = document.getElementById('toggle-form-btn');
-        const searchInput = document.getElementById('search-input');
-        const storeFilter = document.getElementById('store-filter');
-        const brandFilter = document.getElementById('brand-filter');
-        const formStoreSelect = document.getElementById('form-store-select');
-        const formBrandSelect = document.getElementById('form-brand-select');
-        const resetBtn = document.getElementById('reset-filters-btn');
-        const noResultsDiv = document.getElementById('no-results');
-        const paginationControls = document.getElementById('pagination-controls');
-        const prevPageBtn = document.getElementById('prev-page-btn');
-        const nextPageBtn = document.getElementById('next-page-btn');
-        const pageInfo = document.getElementById('page-info');
-        const historyModal = document.getElementById('history-modal');
-        const modalCloseBtn = document.getElementById('modal-close');
+        const ui = {
+            debugLink: document.getElementById('debug-link'),
+            loading: document.getElementById('loading'),
+            pricesContainer: document.getElementById('prices-container'),
+            form: document.getElementById('add-price-form'),
+            toggleBtn: document.getElementById('toggle-form-btn'),
+            searchInput: document.getElementById('search-input'),
+            storeFilter: document.getElementById('store-filter'),
+            brandFilter: document.getElementById('brand-filter'),
+            formStoreSelect: document.getElementById('form-store-select'),
+            formBrandSelect: document.getElementById('form-brand-select'),
+            newStoreInput: document.getElementById('new-store-input'),
+            newBrandInput: document.getElementById('new-brand-input'),
+            resetBtn: document.getElementById('reset-filters-btn'),
+            noResults: document.getElementById('no-results'),
+            pagination: document.getElementById('pagination-controls'),
+            prevBtn: document.getElementById('prev-page-btn'),
+            nextBtn: document.getElementById('next-page-btn'),
+            pageInfo: document.getElementById('page-info'),
+            historyModal: document.getElementById('history-modal'),
+            commentsModal: document.getElementById('comments-modal'),
+            productSuggestions: document.getElementById('product-suggestions')
+        };
 
-        toggleBtn.addEventListener('click', () => {
-            toggleBtn.classList.toggle('form-open-btn');
-            form.style.maxHeight = form.style.maxHeight ? null : form.scrollHeight + "px";
+        ui.debugLink.href = `${apiUrl}?action=debug`;
+        
+        // Event Listeners
+        ui.toggleBtn.addEventListener('click', () => {
+            ui.toggleBtn.classList.toggle('form-open-btn');
+            ui.form.classList.toggle('form-open');
+            ui.form.style.maxHeight = ui.form.classList.contains('form-open') ? `${ui.form.scrollHeight}px` : null;
         });
 
-        modalCloseBtn.addEventListener('click', () => historyModal.classList.add('hidden'));
+        document.querySelectorAll('.modal-close-btn').forEach(btn => btn.addEventListener('click', () => {
+            ui.historyModal.classList.add('hidden');
+            ui.commentsModal.classList.add('hidden');
+        }));
 
-        form.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(); });
-        searchInput.addEventListener('input', () => { currentPage = 1; applyFilters(); });
-        storeFilter.addEventListener('change', () => { currentPage = 1; applyFilters(); });
-        brandFilter.addEventListener('change', () => { currentPage = 1; applyFilters(); });
-        resetBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            storeFilter.value = '';
-            brandFilter.value = '';
+        ui.form.addEventListener('submit', (e) => { e.preventDefault(); handleFormSubmit(); });
+        ui.searchInput.addEventListener('input', () => { currentPage = 1; applyFilters(); });
+        ui.storeFilter.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+        ui.brandFilter.addEventListener('change', () => { currentPage = 1; applyFilters(); });
+        ui.resetBtn.addEventListener('click', () => {
+            ui.searchInput.value = '';
+            ui.storeFilter.value = '';
+            ui.brandFilter.value = '';
             currentPage = 1;
             applyFilters();
         });
-        prevPageBtn.addEventListener('click', () => {
-            if (currentPage > 1) {
-                currentPage--;
-                applyFilters();
-            }
-        });
-        nextPageBtn.addEventListener('click', () => {
+        ui.prevBtn.addEventListener('click', () => { if (currentPage > 1) { currentPage--; applyFilters(); } });
+        ui.nextBtn.addEventListener('click', () => {
             const totalPages = Math.ceil(getFilteredData().length / itemsPerPage);
-            if (currentPage < totalPages) {
-                currentPage++;
-                applyFilters();
-            }
+            if (currentPage < totalPages) { currentPage++; applyFilters(); }
         });
+
+        ui.formStoreSelect.addEventListener('change', (e) => handleOtherSelect(e.target, ui.newStoreInput));
+        ui.formBrandSelect.addEventListener('change', (e) => handleOtherSelect(e.target, ui.newBrandInput));
+
+        function handleOtherSelect(selectElement, inputElement) {
+            if (selectElement.value === 'other') {
+                inputElement.classList.add('visible');
+                inputElement.required = true;
+            } else {
+                inputElement.classList.remove('visible');
+                inputElement.required = false;
+                inputElement.value = '';
+            }
+        }
 
         function handleFormSubmit() {
             const submitBtn = document.getElementById('submit-btn');
             const feedbackDiv = document.getElementById('form-feedback');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Guardando...';
-            const data = Object.fromEntries(new FormData(form).entries());
+            
+            const formData = new FormData(ui.form);
+            const data = Object.fromEntries(formData.entries());
+
+            if (data.Tienda === 'other') data.Tienda = ui.newStoreInput.value;
+            if (data.Marca === 'other') data.Marca = ui.newBrandInput.value;
 
             fetch(apiUrl, { method: 'POST', redirect: 'follow', body: JSON.stringify(data), headers: { "Content-Type": "text/plain;charset=utf-8" }})
             .then(res => {
                 feedbackDiv.textContent = '¡Gracias! Precio agregado. Actualizando...';
                 feedbackDiv.className = 'text-center font-semibold text-green-600';
-                form.reset();
+                ui.form.reset();
+                ui.newStoreInput.classList.remove('visible');
+                ui.newBrandInput.classList.remove('visible');
                 loadPrices(); 
             })
             .catch(err => { 
-                console.error("Error al enviar el formulario:", err);
                 feedbackDiv.textContent = `Error de conexión. Asegúrate de haber re-implementado el script.`; 
                 feedbackDiv.className = 'text-center font-semibold text-red-600'; 
             })
@@ -257,26 +305,27 @@
         }
 
         function loadPrices() {
-            loadingIndicator.style.display = 'flex';
-            pricesContainer.classList.add('hidden');
-            noResultsDiv.classList.add('hidden');
-            paginationControls.classList.add('hidden');
+            ui.loading.style.display = 'flex';
+            ui.pricesContainer.classList.add('hidden');
+            ui.noResults.classList.add('hidden');
+            ui.pagination.classList.add('hidden');
 
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
-                    loadingIndicator.style.display = 'none';
+                    ui.loading.style.display = 'none';
                     
-                    if (!Array.isArray(data)) {
-                        pricesContainer.innerHTML = '<div class="text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm border"><p>Error al cargar los datos.</p></div>';
+                    if (!data || !Array.isArray(data.prices)) {
+                        ui.pricesContainer.innerHTML = '<div class="text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm border"><p>Error al cargar los datos.</p></div>';
                         return;
                     }
                     
-                    const validData = data.filter(item => item.Producto && item.Producto.trim() !== '');
+                    allComments = data.comments || {};
+                    const validData = data.prices.filter(item => item.Producto && item.Producto.trim() !== '');
 
                     if (validData.length === 0) {
-                        pricesContainer.innerHTML = '<div class="text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm border"><p>Aún no se han agregado precios. ¡Sé el primero!</p></div>';
-                        pricesContainer.classList.remove('hidden');
+                        ui.pricesContainer.innerHTML = '<div class="text-center text-gray-500 p-8 bg-white rounded-lg shadow-sm border"><p>Aún no se han agregado precios. ¡Sé el primero!</p></div>';
+                        ui.pricesContainer.classList.remove('hidden');
                         return;
                     }
                     
@@ -285,31 +334,38 @@
                     applyFilters();
                 })
                 .catch(error => {
-                    loadingIndicator.innerHTML = `<div class="text-center text-red-600 p-8 bg-red-50 rounded-lg border border-red-200"><p class="font-bold">❌ Error al cargar los precios.</p><p class="text-sm mt-1">Verifica la conexión del script y los encabezados en la hoja de cálculo.</p></div>`;
+                    ui.loading.innerHTML = `<div class="text-center text-red-600 p-8 bg-red-50 rounded-lg border border-red-200"><p class="font-bold">❌ Error al cargar los precios.</p><p class="text-sm mt-1">Verifica la conexión del script y los encabezados en la hoja de cálculo.</p></div>`;
                 });
         }
 
         function populateDropdowns(data) {
             const stores = [...new Set(data.map(item => item.Tienda).filter(Boolean))].sort();
             const brands = [...new Set(data.map(item => item.Marca).filter(Boolean))].sort();
+            const products = [...new Set(data.map(item => item.Producto).filter(Boolean))].sort();
 
-            storeFilter.innerHTML = '<option value="">Todas las tiendas</option>';
-            stores.forEach(store => storeFilter.add(new Option(store, store)));
+            const populateSelect = (select, options, defaultText) => {
+                select.innerHTML = `<option value="">${defaultText}</option>`;
+                options.forEach(opt => select.add(new Option(opt, opt)));
+                if (select.id.startsWith('form-')) select.add(new Option('Otra (especificar)...', 'other'));
+            };
 
-            brandFilter.innerHTML = '<option value="">Todas las marcas</option>';
-            brands.forEach(brand => brandFilter.add(new Option(brand, brand)));
+            populateSelect(ui.storeFilter, stores, 'Todas las tiendas');
+            populateSelect(ui.brandFilter, brands, 'Todas las marcas');
+            populateSelect(ui.formStoreSelect, stores, 'Seleccionar tienda...');
+            populateSelect(ui.formBrandSelect, brands, 'Seleccionar marca...');
 
-            formStoreSelect.innerHTML = '<option value="">Seleccionar tienda...</option>';
-            stores.forEach(store => formStoreSelect.add(new Option(store, store)));
-            
-            formBrandSelect.innerHTML = '<option value="">Seleccionar marca...</option>';
-            brands.forEach(brand => formBrandSelect.add(new Option(brand, brand)));
+            ui.productSuggestions.innerHTML = '';
+            products.forEach(prod => {
+                const option = document.createElement('option');
+                option.value = prod;
+                ui.productSuggestions.appendChild(option);
+            });
         }
 
         function getFilteredData() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const selectedStore = storeFilter.value;
-            const selectedBrand = brandFilter.value;
+            const searchTerm = ui.searchInput.value.toLowerCase();
+            const selectedStore = ui.storeFilter.value;
+            const selectedBrand = ui.brandFilter.value;
 
             return allPrices.filter(item => {
                 const productMatch = item.Producto ? item.Producto.toLowerCase().includes(searchTerm) : false;
@@ -329,78 +385,57 @@
             tableBody.innerHTML = '';
 
             if (data.length === 0) {
-                noResultsDiv.classList.remove('hidden');
-                pricesContainer.classList.add('hidden');
-                paginationControls.classList.add('hidden');
+                ui.noResults.classList.remove('hidden');
+                ui.pricesContainer.classList.add('hidden');
+                ui.pagination.classList.add('hidden');
                 return;
             }
             
-            noResultsDiv.classList.add('hidden');
-            pricesContainer.classList.remove('hidden');
-            paginationControls.classList.remove('hidden');
+            ui.noResults.classList.add('hidden');
+            ui.pricesContainer.classList.remove('hidden');
+            ui.pagination.classList.remove('hidden');
 
             const totalPages = Math.ceil(data.length / itemsPerPage);
-            pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
-            prevPageBtn.disabled = currentPage === 1;
-            nextPageBtn.disabled = currentPage === totalPages;
+            ui.pageInfo.textContent = `Página ${currentPage} de ${totalPages}`;
+            ui.prevBtn.disabled = currentPage === 1;
+            ui.nextBtn.disabled = currentPage === totalPages;
 
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const paginatedData = data.slice(startIndex, endIndex);
-
+            const paginatedData = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
             const bestOffers = findBestOffers(data);
-
             paginatedData.forEach(item => addPriceToTable(item, bestOffers));
         }
         
         function findBestOffers(data) {
-            const pricePerUnitMap = new Map();
+            const map = new Map();
             data.forEach(item => {
                 const price = Number(item.Precio);
                 const quantity = Number(item.Cantidad);
                 if (!isNaN(price) && !isNaN(quantity) && quantity > 0) {
-                    const pricePerUnit = price / quantity;
+                    const ppu = price / quantity;
                     const key = `${item.Producto.toLowerCase()}-${item.Marca.toLowerCase()}`;
-                    if (!pricePerUnitMap.has(key) || pricePerUnit < pricePerUnitMap.get(key).pricePerUnit) {
-                        pricePerUnitMap.set(key, { pricePerUnit, rowNum: item.rowNum });
+                    if (!map.has(key) || ppu < map.get(key).ppu) {
+                        map.set(key, { ppu, rowNum: item.rowNum });
                     }
                 }
             });
-            return pricePerUnitMap;
+            return map;
         }
 
         function addPriceToTable(item, bestOffers) {
             const tableBody = document.getElementById('prices-tbody');
-            if (!tableBody || !item) return;
-
             let row = tableBody.insertRow();
             const key = `${item.Producto.toLowerCase()}-${item.Marca.toLowerCase()}`;
-            if (bestOffers.has(key) && bestOffers.get(key).rowNum === item.rowNum) {
-                row.className = 'bg-white border-b hover:bg-gray-50 best-offer';
-            } else {
-                row.className = 'bg-white border-b hover:bg-gray-50';
-            }
+            row.className = `bg-white border-b hover:bg-gray-50 ${bestOffers.has(key) && bestOffers.get(key).rowNum === item.rowNum ? 'best-offer' : ''}`;
             row.id = `row-${item.rowNum}`;
 
             const productInfo = `${item.Producto || 'N/A'} (${item.Cantidad || ''} ${item.Unidad || ''})`;
             const pricePerUnit = calculatePricePerUnit(item);
+            const isBest = isBestOffer(item, bestOffers);
 
             // ===== CÓDIGO CORREGIDO PARA MOSTRAR TODAS LAS COLUMNAS =====
-            const mobileRowHTML = `
-                <td data-label="Producto" class="product-cell text-gray-900">${productInfo} ${isBestOffer(item, bestOffers) ? '⭐' : ''}</td>
-                <td data-label="Fecha">${formatDate(item.Timestamp)}</td>
-                <td data-label="Marca">${item.Marca || 'N/A'}</td>
-                <td data-label="Tienda">${item.Tienda || 'N/A'}</td>
-                <td data-label="Precio" class="text-right font-semibold text-lg text-gray-800">${formatPrice(item.Precio)}</td>
-                <td data-label="Precio/Unidad" class="text-right text-sm text-gray-500">${pricePerUnit}</td>
-                <td data-label="Calidad Oferta"></td>
-                <td data-label="Veracidad"></td>
-                <td data-label="Historial"></td>
-            `;
-            
             const desktopRowHTML = `
                 <td class="px-6 py-4">${formatDate(item.Timestamp)}</td>
-                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${productInfo} ${isBestOffer(item, bestOffers) ? '⭐' : ''}</td>
+                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${productInfo} ${isBest ? '⭐' : ''}</td>
                 <td class="px-6 py-4">${item.Marca || 'N/A'}</td>
                 <td class="px-6 py-4">${item.Tienda || 'N/A'}</td>
                 <td class="px-6 py-4 text-right font-semibold text-gray-800">${formatPrice(item.Precio)}</td>
@@ -409,33 +444,44 @@
                 <td></td>
                 <td></td>
             `;
-
-            if (window.innerWidth <= 768) {
-                row.innerHTML = mobileRowHTML;
-            } else {
-                row.innerHTML = desktopRowHTML;
-            }
+            row.innerHTML = desktopRowHTML;
             
             createVotingUI(row.cells[6], item, 'Oferta', 'rateGood', 'rateBad');
             createVotingUI(row.cells[7], item, 'Realidad', 'validateReal', 'validateFake');
-            createHistoryButton(row.cells[8], item);
+            createActionButtons(row.cells[8], item);
         }
 
-        function createHistoryButton(cell, item) {
+        function createActionButtons(cell, item) {
             cell.className = 'text-center px-6 py-4';
+            const container = document.createElement('div');
+            container.className = 'flex items-center justify-center space-x-2';
+
             const historyBtn = document.createElement('button');
+            historyBtn.title = "Ver historial de precios";
             historyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400 hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>`;
             historyBtn.onclick = () => showPriceHistory(item);
-            cell.appendChild(historyBtn);
+            
+            const commentBtn = document.createElement('button');
+            commentBtn.title = "Ver comentarios";
+            commentBtn.className = "relative";
+            commentBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-400 hover:text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>`;
+            const commentCount = allComments[item.rowNum]?.length || 0;
+            if (commentCount > 0) {
+                const badge = document.createElement('span');
+                badge.className = "absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center";
+                badge.textContent = commentCount;
+                commentBtn.appendChild(badge);
+            }
+            commentBtn.onclick = () => showComments(item);
+
+            container.appendChild(historyBtn);
+            container.appendChild(commentBtn);
+            cell.appendChild(container);
         }
 
         function showPriceHistory(item) {
-            const productHistory = allPrices
-                .filter(p => p.Producto === item.Producto && p.Marca === item.Marca)
-                .sort((a, b) => new Date(a.Timestamp) - new Date(b.Timestamp));
-
+            const productHistory = allPrices.filter(p => p.Producto === item.Producto && p.Marca === item.Marca).sort((a, b) => new Date(a.Timestamp) - new Date(b.Timestamp));
             document.getElementById('modal-title').textContent = `Historial de: ${item.Producto} (${item.Marca})`;
-            
             const historyList = document.getElementById('history-list');
             historyList.innerHTML = '';
             productHistory.forEach(p => {
@@ -444,32 +490,57 @@
                 li.innerHTML = `<span>${formatDate(p.Timestamp)} - <strong>${p.Tienda}</strong></span> <span class="font-semibold">${formatPrice(p.Precio)}</span>`;
                 historyList.appendChild(li);
             });
-
-            const chartCtx = document.getElementById('price-chart').getContext('2d');
-            if(priceChartInstance) {
-                priceChartInstance.destroy();
-            }
-            priceChartInstance = new Chart(chartCtx, {
+            if(priceChartInstance) priceChartInstance.destroy();
+            priceChartInstance = new Chart(document.getElementById('price-chart').getContext('2d'), {
                 type: 'line',
-                data: {
-                    labels: productHistory.map(p => formatDate(p.Timestamp)),
-                    datasets: [{
-                        label: 'Precio',
-                        data: productHistory.map(p => Number(p.Precio)),
-                        borderColor: '#4f46e5',
-                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
-                        fill: true,
-                        tension: 0.1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: { legend: { display: false } },
-                    scales: { y: { beginAtZero: false } }
-                }
+                data: { labels: productHistory.map(p => formatDate(p.Timestamp)), datasets: [{ label: 'Precio', data: productHistory.map(p => Number(p.Precio)), borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', fill: true, tension: 0.1 }] },
+                options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: false } } }
             });
+            ui.historyModal.classList.remove('hidden');
+        }
 
-            historyModal.classList.remove('hidden');
+        function showComments(item) {
+            document.getElementById('comments-modal-title').textContent = `Comentarios de: ${item.Producto}`;
+            const commentsList = document.getElementById('comments-list');
+            commentsList.innerHTML = '';
+            const itemComments = allComments[item.rowNum] || [];
+            if (itemComments.length === 0) {
+                commentsList.innerHTML = '<p class="text-gray-500">No hay comentarios aún. ¡Sé el primero!</p>';
+            } else {
+                itemComments.forEach(comment => {
+                    const div = document.createElement('div');
+                    div.className = 'p-2 border-b';
+                    div.textContent = comment;
+                    commentsList.appendChild(div);
+                });
+            }
+            
+            const commentForm = document.getElementById('comment-form');
+            commentForm.onsubmit = (e) => {
+                e.preventDefault();
+                const commentText = document.getElementById('comment-text').value;
+                if (commentText.trim()) {
+                    handleCommentSubmit(item.rowNum, commentText);
+                }
+            };
+
+            ui.commentsModal.classList.remove('hidden');
+        }
+
+        function handleCommentSubmit(rowNum, commentText) {
+            const payload = { action: 'addComment', rowNum, commentText };
+            fetch(apiUrl, { method: 'POST', redirect: 'follow', body: JSON.stringify(payload), headers: { "Content-Type": "text/plain;charset=utf-8" }})
+            .then(res => res.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    document.getElementById('comment-text').value = '';
+                    ui.commentsModal.classList.add('hidden');
+                    loadPrices(); // Recargar todo para actualizar el contador de comentarios
+                } else {
+                    alert('Error al agregar el comentario.');
+                }
+            })
+            .catch(err => alert('Error de conexión al agregar comentario.'));
         }
 
         function isBestOffer(item, bestOffers) {
