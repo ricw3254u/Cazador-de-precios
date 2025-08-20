@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cazador de Precios</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        #add-price-form { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-gray-900">Cazador de Precios 🛒</h1>
+            <p class="text-lg text-gray-600 mt-2">Los últimos precios reportados por la comunidad.</p>
+        </header>
+
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8 max-w-2xl mx-auto">
+            <button id="toggle-form-btn" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                + Agregar un Nuevo Precio
+            </button>
+            <form id="add-price-form" class="mt-4 space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="text" name="Producto" placeholder="Nombre del Producto" required class="p-2 border rounded w-full">
+                    <input type="text" name="Marca" placeholder="Marca" class="p-2 border rounded w-full">
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <input type="number" name="Precio" placeholder="Precio (ej: 25.50)" step="0.01" required class="p-2 border rounded w-full">
+                    <input type="number" name="Cantidad" placeholder="Cantidad (ej: 1)" step="any" required class="p-2 border rounded w-full">
+                    <input type="text" name="Unidad" placeholder="Unidad (kg, L, pza)" required class="p-2 border rounded w-full">
+                </div>
+                <input type="text" name="Tienda" placeholder="Nombre de la Tienda" required class="p-2 border rounded w-full">
+                <div id="form-feedback" class="text-center font-semibold"></div>
+                <button type="submit" id="submit-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg">
+                    Guardar Precio
+                </button>
+            </form>
+        </div>
+
+        <div id="loading" class="flex flex-col items-center justify-center p-10"><div class="loader mb-4"></div><p>Cargando precios...</p></div>
+        
+        <div id="prices-container" class="hidden bg-white rounded-lg shadow-md overflow-x-auto">
+            <table class="w-full text-sm text-left text-gray-500">
+                <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <tr>
+                        <!-- ===== COLUMNA DE FECHA AGREGADA ===== -->
+                        <th scope="col" class="px-6 py-3">Fecha</th>
+                        <th scope="col" class="px-6 py-3">Producto</th>
+                        <th scope="col" class="px-6 py-3">Marca</th>
+                        <th scope="col" class="px-6 py-3">Tienda</th>
+                        <th scope="col" class="px-6 py-3">Cantidad</th>
+                        <th scope="col" class="px-6 py-3 text-right">Precio</th>
+                    </tr>
+                </thead>
+                <tbody id="prices-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = 'https://script.google.com/macros/s/AKfycbzsOVeDV3skJ1SFjcidrW8M48JuOjo73ykU3-t7oyrARp_U6gUq3pM3_WOAFsZxGi8sVw/exec';
+        
+        const loadingIndicator = document.getElementById('loading');
+        const pricesContainer = document.getElementById('prices-container');
+        const tableBody = document.getElementById('prices-tbody');
+        const form = document.getElementById('add-price-form');
+        const toggleBtn = document.getElementById('toggle-form-btn');
+        const feedbackDiv = document.getElementById('form-feedback');
+        const submitBtn = document.getElementById('submit-btn');
+
+        toggleBtn.addEventListener('click', () => {
+            if (form.style.maxHeight) {
+                form.style.maxHeight = null;
+            } else {
+                form.style.maxHeight = form.scrollHeight + "px";
+            }
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Guardando...';
+            feedbackDiv.textContent = '';
+
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch(apiUrl, {
+                method: 'POST',
+                redirect: 'follow', 
+                body: JSON.stringify(data),
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+            })
+            .then(response => {
+                feedbackDiv.textContent = '¡Gracias! Precio agregado. Actualizando lista...';
+                feedbackDiv.className = 'text-green-600';
+                form.reset();
+                // ===== ACTUALIZACIÓN MEJORADA =====
+                // Vuelve a cargar todos los precios para mostrar la lista más reciente.
+                loadPrices(); 
+            })
+            .catch(error => {
+                feedbackDiv.textContent = `Error: ${error.message}`;
+                feedbackDiv.className = 'text-red-600';
+            })
+            .finally(() => {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Guardar Precio';
+                setTimeout(() => { feedbackDiv.textContent = ''; }, 4000);
+            });
+        });
+
+        function loadPrices() {
+            // Muestra el loader cada vez que se cargan los precios
+            loadingIndicator.style.display = 'flex';
+            pricesContainer.classList.add('hidden');
+
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(data => {
+                    loadingIndicator.style.display = 'none';
+                    pricesContainer.classList.remove('hidden');
+                    tableBody.innerHTML = ''; 
+                    const sortedData = data.sort((a, b) => new Date(b.Timestamp) - new Date(a.Timestamp));
+                    sortedData.forEach(item => addPriceToTable(item));
+                })
+                .catch(error => {
+                    console.error("Error al cargar:", error);
+                    loadingIndicator.innerHTML = `<p class="text-red-600 font-bold">❌ Error al cargar los precios.</p>`;
+                });
+        }
+        
+        function addPriceToTable(item) {
+            let row = tableBody.insertRow();
+            row.className = 'bg-white border-b hover:bg-gray-50';
+
+            // ===== CELDA DE FECHA AGREGADA Y FORMATEADA =====
+            const dateCell = row.insertCell();
+            const date = new Date(item.Timestamp);
+            // Formato amigable: DD/MM/AAAA, HH:MM
+            const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            dateCell.textContent = formattedDate;
+            dateCell.className = 'px-6 py-4';
+
+            row.insertCell().outerHTML = `<th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.Producto}</th>`;
+            row.insertCell().textContent = item.Marca;
+            row.insertCell().textContent = item.Tienda;
+            row.insertCell().textContent = `${item.Cantidad} ${item.Unidad}`;
+            const priceCell = row.insertCell();
+            priceCell.className = 'px-6 py-4 text-right font-semibold';
+            priceCell.textContent = `$${Number(item.Precio).toFixed(2)}`;
+        }
+
+        loadPrices();
+    </script>
+
+</body>
+</html>
