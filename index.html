@@ -9,8 +9,8 @@
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #add-price-form { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
-        .validation-btn { transition: all 0.2s ease-in-out; }
-        .validation-btn:disabled { background-color: #9ca3af; cursor: not-allowed; }
+        .action-btn { transition: all 0.2s ease-in-out; }
+        .action-btn:disabled { background-color: #9ca3af; cursor: not-allowed; opacity: 0.7; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans">
@@ -18,7 +18,7 @@
     <div class="container mx-auto p-4 md:p-8">
         <header class="text-center mb-8">
             <h1 class="text-4xl font-bold text-gray-900">Cazador de Precios 🛒</h1>
-            <p class="text-lg text-gray-600 mt-2">Los últimos precios reportados por la comunidad.</p>
+            <p class="text-lg text-gray-600 mt-2">Valida las ofertas reportadas por la comunidad.</p>
         </header>
 
         <div class="bg-white rounded-lg shadow-md p-6 mb-8 max-w-2xl mx-auto">
@@ -40,11 +40,11 @@
             <table class="w-full text-sm text-left text-gray-500">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                     <tr>
-                        <th scope="col" class="px-6 py-3">Fecha</th>
                         <th scope="col" class="px-6 py-3">Producto</th>
                         <th scope="col" class="px-6 py-3">Tienda</th>
                         <th scope="col" class="px-6 py-3 text-right">Precio</th>
-                        <th scope="col" class="px-6 py-3 text-center">Verificado</th>
+                        <th scope="col" class="px-6 py-3 text-center">Calidad Oferta</th>
+                        <th scope="col" class="px-6 py-3 text-center">Veracidad</th>
                     </tr>
                 </thead>
                 <tbody id="prices-tbody"></tbody>
@@ -53,22 +53,19 @@
     </div>
 
     <script>
-        // ===== URL ACTUALIZADA =====
         const apiUrl = 'https://script.google.com/macros/s/AKfycbza_-cTtpVWb1cIUdItVXJRdvEk_q6ybdxyUeb3AoR8vScUBsK2NPfrcuL-HvciVzJ8IA/exec';
         
         const loadingIndicator = document.getElementById('loading');
         const pricesContainer = document.getElementById('prices-container');
         const form = document.getElementById('add-price-form');
         const toggleBtn = document.getElementById('toggle-form-btn');
-        const feedbackDiv = document.getElementById('form-feedback');
-        const submitBtn = document.getElementById('submit-btn');
 
-        toggleBtn.addEventListener('click', () => {
-            form.style.maxHeight = form.style.maxHeight ? null : form.scrollHeight + "px";
-        });
+        toggleBtn.addEventListener('click', () => { form.style.maxHeight = form.style.maxHeight ? null : form.scrollHeight + "px"; });
 
         form.addEventListener('submit', (e) => {
             e.preventDefault();
+            const submitBtn = document.getElementById('submit-btn');
+            const feedbackDiv = document.getElementById('form-feedback');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Guardando...';
             const data = Object.fromEntries(new FormData(form).entries());
@@ -91,7 +88,6 @@
         function loadPrices() {
             loadingIndicator.style.display = 'flex';
             pricesContainer.classList.add('hidden');
-
             fetch(apiUrl)
                 .then(response => response.json())
                 .then(data => {
@@ -109,7 +105,7 @@
                     sortedData.forEach(item => addPriceToTable(item));
                 })
                 .catch(error => {
-                    loadingIndicator.innerHTML = `<p class="text-red-600 font-bold">❌ Error al cargar los precios.</p><p class="text-gray-600 mt-2">Verifica que los encabezados en la hoja de cálculo sean correctos.</p>`;
+                    loadingIndicator.innerHTML = `<p class="text-red-600 font-bold">❌ Error al cargar los precios.</p><p class="text-gray-600 mt-2">Verifica los encabezados en la hoja de cálculo.</p>`;
                 });
         }
         
@@ -119,10 +115,11 @@
 
             let row = tableBody.insertRow();
             row.className = 'bg-white border-b hover:bg-gray-50';
+            row.id = `row-${item.rowNum}`;
 
             const date = new Date(item.Timestamp);
-            row.insertCell().textContent = isNaN(date) ? 'Inválida' : date.toLocaleDateString();
-            row.insertCell().outerHTML = `<th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${item.Producto || 'N/A'} (${item.Cantidad || ''} ${item.Unidad || ''})</th>`;
+            const productInfo = `${item.Producto || 'N/A'} (${item.Cantidad || ''} ${item.Unidad || ''}) <br> <span class="text-xs text-gray-500">${isNaN(date) ? 'Inválida' : date.toLocaleDateString()}</span>`;
+            row.insertCell().innerHTML = `<th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${productInfo}</th>`;
             row.insertCell().textContent = item.Tienda || 'N/A';
             
             const price = Number(item.Precio);
@@ -130,41 +127,69 @@
             priceCell.className = 'px-6 py-4 text-right font-semibold';
             priceCell.textContent = isNaN(price) ? 'Inválido' : `$${price.toFixed(2)}`;
 
-            const validationCell = row.insertCell();
-            validationCell.className = 'px-6 py-4 text-center';
+            // --- Celda de Calidad de Oferta ---
+            const offerCell = row.insertCell();
+            offerCell.className = 'px-6 py-4 text-center';
+            createVotingUI(offerCell, item, 'Oferta', 'rateGood', 'rateBad', '👍', '👎');
+
+            // --- Celda de Veracidad ---
+            const realityCell = row.insertCell();
+            realityCell.className = 'px-6 py-4 text-center';
+            createVotingUI(realityCell, item, 'Realidad', 'validateReal', 'validateFake', '✅', '❌');
+        }
+
+        function createVotingUI(cell, item, scoreType, actionUp, actionDown, labelUp, labelDown) {
+            const scoreSpan = document.createElement('span');
+            scoreSpan.className = 'font-bold text-lg mr-2';
             
-            const countSpan = document.createElement('span');
-            countSpan.className = 'font-bold text-lg text-blue-600 mr-2';
-            countSpan.textContent = item.Validaciones || 0;
+            const btnUp = document.createElement('button');
+            btnUp.textContent = labelUp;
+            btnUp.className = 'action-btn bg-green-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-green-600';
+            
+            const btnDown = document.createElement('button');
+            btnDown.textContent = labelDown;
+            btnDown.className = 'action-btn bg-red-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-red-600 ml-1';
 
-            const validateBtn = document.createElement('button');
-            validateBtn.textContent = 'Validar 👍';
-            validateBtn.className = 'validation-btn bg-green-500 text-white text-xs font-bold py-1 px-2 rounded hover:bg-green-600';
-            validateBtn.onclick = () => {
-                validateBtn.disabled = true;
-                validateBtn.textContent = 'Enviando...';
+            function updateScore(span, score) {
+                span.textContent = score;
+                span.classList.remove('text-blue-600', 'text-red-600', 'text-gray-600');
+                if (score > 0) span.classList.add('text-blue-600');
+                else if (score < 0) span.classList.add('text-red-600');
+                else span.classList.add('text-gray-600');
+            }
 
-                const payload = { action: 'validate', rowNum: item.rowNum };
+            updateScore(scoreSpan, item[scoreType] || 0);
+
+            function handleVote(action) {
+                btnUp.disabled = true;
+                btnDown.disabled = true;
+
+                const payload = { action: action, rowNum: item.rowNum };
                 fetch(apiUrl, { method: 'POST', redirect: 'follow', body: JSON.stringify(payload), headers: { "Content-Type": "text/plain;charset=utf-8" }})
                 .then(res => res.json())
                 .then(result => {
-                    if(result.status === 'success') {
-                        countSpan.textContent = result.newCount;
-                        validateBtn.textContent = '¡Validado!';
-                        validateBtn.classList.replace('bg-green-500', 'bg-gray-400');
+                    if(result.status === 'deleted') {
+                        const rowToRemove = document.getElementById(`row-${item.rowNum}`);
+                        if(rowToRemove) rowToRemove.remove();
+                    } else if (result.status === 'success') {
+                        updateScore(scoreSpan, result.newCount);
                     } else {
-                        validateBtn.textContent = 'Error';
-                        validateBtn.disabled = false;
+                        btnUp.disabled = false;
+                        btnDown.disabled = false;
                     }
                 })
                 .catch(err => {
-                    validateBtn.textContent = 'Reintentar';
-                    validateBtn.disabled = false;
+                    btnUp.disabled = false;
+                    btnDown.disabled = false;
                 });
-            };
+            }
+
+            btnUp.onclick = () => handleVote(actionUp);
+            btnDown.onclick = () => handleVote(actionDown);
             
-            validationCell.appendChild(countSpan);
-            validationCell.appendChild(validateBtn);
+            cell.appendChild(scoreSpan);
+            cell.appendChild(btnUp);
+            cell.appendChild(btnDown);
         }
 
         loadPrices();
