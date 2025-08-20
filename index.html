@@ -38,9 +38,12 @@
         
         <div id="prices-container" class="hidden bg-white rounded-lg shadow-md overflow-x-auto">
             <table class="w-full text-sm text-left text-gray-500">
+                <!-- ===== ENCABEZADOS DE TABLA CORREGIDOS ===== -->
                 <thead class="text-xs text-gray-700 uppercase bg-gray-50">
                     <tr>
+                        <th scope="col" class="px-6 py-3">Fecha</th>
                         <th scope="col" class="px-6 py-3">Producto</th>
+                        <th scope="col" class="px-6 py-3">Marca</th>
                         <th scope="col" class="px-6 py-3">Tienda</th>
                         <th scope="col" class="px-6 py-3 text-right">Precio</th>
                         <th scope="col" class="px-6 py-3 text-center">Calidad Oferta</th>
@@ -117,22 +120,34 @@
             row.className = 'bg-white border-b hover:bg-gray-50';
             row.id = `row-${item.rowNum}`;
 
+            // --- LÓGICA DE CELDAS CORREGIDA ---
+            
+            // 1. Celda de Fecha (Timestamp)
             const date = new Date(item.Timestamp);
-            const productInfo = `${item.Producto || 'N/A'} (${item.Cantidad || ''} ${item.Unidad || ''}) <br> <span class="text-xs text-gray-500">${isNaN(date) ? 'Inválida' : date.toLocaleDateString()}</span>`;
-            row.insertCell().innerHTML = `<th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${productInfo}</th>`;
+            row.insertCell().textContent = isNaN(date) ? 'Inválida' : date.toLocaleDateString();
+
+            // 2. Celda de Producto (con Cantidad y Unidad)
+            const productInfo = `${item.Producto || 'N/A'} (${item.Cantidad || ''} ${item.Unidad || ''})`;
+            row.insertCell().outerHTML = `<th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${productInfo}</th>`;
+            
+            // 3. Celda de Marca
+            row.insertCell().textContent = item.Marca || 'N/A';
+
+            // 4. Celda de Tienda
             row.insertCell().textContent = item.Tienda || 'N/A';
             
+            // 5. Celda de Precio
             const price = Number(item.Precio);
             const priceCell = row.insertCell();
             priceCell.className = 'px-6 py-4 text-right font-semibold';
             priceCell.textContent = isNaN(price) ? 'Inválido' : `$${price.toFixed(2)}`;
 
-            // --- Celda de Calidad de Oferta ---
+            // 6. Celda de Calidad de Oferta
             const offerCell = row.insertCell();
             offerCell.className = 'px-6 py-4 text-center';
             createVotingUI(offerCell, item, 'Oferta', 'rateGood', 'rateBad', '👍', '👎');
 
-            // --- Celda de Veracidad ---
+            // 7. Celda de Veracidad
             const realityCell = row.insertCell();
             realityCell.className = 'px-6 py-4 text-center';
             createVotingUI(realityCell, item, 'Realidad', 'validateReal', 'validateFake', '✅', '❌');
