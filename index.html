@@ -14,14 +14,7 @@
         }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #4f46e5; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        /* ===== CORRECCIÓN DEL FORMULARIO ===== */
-        #add-price-form {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.5s ease-in-out;
-        }
-
+        #add-price-form { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
         .action-btn { transition: all 0.2s ease-in-out; }
         .action-btn:disabled { background-color: #9ca3af; cursor: not-allowed; opacity: 0.7; }
         .form-open-btn {
@@ -55,19 +48,24 @@
                 </button>
             </div>
             <div id="form-container" class="bg-white rounded-xl shadow-sm border border-gray-200">
-                <!-- ===== ESTRUCTURA DEL FORMULARIO CORREGIDA ===== -->
                 <form id="add-price-form">
                     <div class="p-6 space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <input type="text" name="Producto" placeholder="Nombre del Producto" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-                            <input type="text" name="Marca" placeholder="Marca" class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <!-- ===== CAMPO DE MARCA AHORA ES UN SELECT ===== -->
+                            <select name="Marca" id="form-brand-select" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="">Seleccionar marca...</option>
+                            </select>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <input type="number" name="Precio" placeholder="Precio (ej: 25.50)" step="0.01" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <input type="number" name="Cantidad" placeholder="Cantidad (ej: 1)" step="any" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <input type="text" name="Unidad" placeholder="Unidad (kg, L, pza)" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                         </div>
-                        <input type="text" name="Tienda" placeholder="Nombre de la Tienda" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <!-- ===== CAMPO DE TIENDA AHORA ES UN SELECT ===== -->
+                        <select name="Tienda" id="form-store-select" required class="p-3 border border-gray-300 rounded-md w-full focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                            <option value="">Seleccionar tienda...</option>
+                        </select>
                         <div id="form-feedback" class="text-center font-semibold h-6"></div>
                         <button type="submit" id="submit-btn" class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">Guardar Precio</button>
                     </div>
@@ -75,7 +73,6 @@
             </div>
         </div>
 
-        <!-- ===== SECCIÓN DE BÚSQUEDA Y FILTROS ===== -->
         <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div class="md:col-span-2">
@@ -135,6 +132,8 @@
         const searchInput = document.getElementById('search-input');
         const storeFilter = document.getElementById('store-filter');
         const brandFilter = document.getElementById('brand-filter');
+        const formStoreSelect = document.getElementById('form-store-select');
+        const formBrandSelect = document.getElementById('form-brand-select');
         const resetBtn = document.getElementById('reset-filters-btn');
         const noResultsDiv = document.getElementById('no-results');
 
@@ -201,7 +200,7 @@
                     }
                     
                     allPrices = data.sort((a, b) => new Date(b.Timestamp) - new Date(a.Timestamp));
-                    populateFilters(allPrices);
+                    populateDropdowns(allPrices);
                     applyFilters();
                 })
                 .catch(error => {
@@ -209,25 +208,24 @@
                 });
         }
 
-        function populateFilters(data) {
-            const stores = [...new Set(data.map(item => item.Tienda).filter(Boolean))];
-            const brands = [...new Set(data.map(item => item.Marca).filter(Boolean))];
+        // ===== FUNCIÓN MEJORADA PARA POBLAR TODOS LOS DROPDOWNS =====
+        function populateDropdowns(data) {
+            const stores = [...new Set(data.map(item => item.Tienda).filter(Boolean))].sort();
+            const brands = [...new Set(data.map(item => item.Marca).filter(Boolean))].sort();
 
+            // Limpiar y poblar filtros
             storeFilter.innerHTML = '<option value="">Todas las tiendas</option>';
-            stores.sort().forEach(store => {
-                const option = document.createElement('option');
-                option.value = store;
-                option.textContent = store;
-                storeFilter.appendChild(option);
-            });
+            stores.forEach(store => storeFilter.add(new Option(store, store)));
 
             brandFilter.innerHTML = '<option value="">Todas las marcas</option>';
-            brands.sort().forEach(brand => {
-                const option = document.createElement('option');
-                option.value = brand;
-                option.textContent = brand;
-                brandFilter.appendChild(option);
-            });
+            brands.forEach(brand => brandFilter.add(new Option(brand, brand)));
+
+            // Limpiar y poblar selects del formulario
+            formStoreSelect.innerHTML = '<option value="">Seleccionar tienda...</option>';
+            stores.forEach(store => formStoreSelect.add(new Option(store, store)));
+            
+            formBrandSelect.innerHTML = '<option value="">Seleccionar marca...</option>';
+            brands.forEach(brand => formBrandSelect.add(new Option(brand, brand)));
         }
 
         function applyFilters() {
