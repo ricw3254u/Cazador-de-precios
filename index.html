@@ -18,7 +18,7 @@
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         #add-price-form { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
         .action-btn { transition: all 0.2s ease-in-out; }
-        .action-btn:disabled { background-color: #9ca3af; cursor: not-allowed; opacity: 0.7; }
+        .action-btn:disabled { background-color: #e5e7eb; cursor: not-allowed; opacity: 0.7; color: #6b7280; }
         .form-open-btn {
             background-color: #e0e7ff !important;
             color: #4338ca !important;
@@ -114,8 +114,12 @@
         <div id="prices-container" class="hidden">
             <table class="w-full text-sm text-left text-gray-500 responsive-table">
                 <thead class="text-xs text-gray-700 uppercase bg-gray-100 rounded-t-lg">
+                    <!-- ===== ENCABEZADOS CORREGIDOS ===== -->
                     <tr>
+                        <th scope="col" class="px-6 py-3">Fecha</th>
                         <th scope="col" class="px-6 py-3">Producto</th>
+                        <th scope="col" class="px-6 py-3">Marca</th>
+                        <th scope="col" class="px-6 py-3">Tienda</th>
                         <th scope="col" class="px-6 py-3 text-right">Precio</th>
                         <th scope="col" class="px-6 py-3 text-right">Precio/Unidad</th>
                         <th scope="col" class="px-6 py-3 text-center">Calidad Oferta</th>
@@ -381,8 +385,11 @@
             const productInfo = `${item.Producto || 'N/A'} (${item.Cantidad || ''} ${item.Unidad || ''})`;
             const pricePerUnit = calculatePricePerUnit(item);
 
+            // ===== CÓDIGO CORREGIDO PARA MOSTRAR TODAS LAS COLUMNAS =====
             const mobileRowHTML = `
                 <td data-label="Producto" class="product-cell text-gray-900">${productInfo} ${isBestOffer(item, bestOffers) ? '⭐' : ''}</td>
+                <td data-label="Fecha">${formatDate(item.Timestamp)}</td>
+                <td data-label="Marca">${item.Marca || 'N/A'}</td>
                 <td data-label="Tienda">${item.Tienda || 'N/A'}</td>
                 <td data-label="Precio" class="text-right font-semibold text-lg text-gray-800">${formatPrice(item.Precio)}</td>
                 <td data-label="Precio/Unidad" class="text-right text-sm text-gray-500">${pricePerUnit}</td>
@@ -392,7 +399,9 @@
             `;
             
             const desktopRowHTML = `
+                <td class="px-6 py-4">${formatDate(item.Timestamp)}</td>
                 <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">${productInfo} ${isBestOffer(item, bestOffers) ? '⭐' : ''}</td>
+                <td class="px-6 py-4">${item.Marca || 'N/A'}</td>
                 <td class="px-6 py-4">${item.Tienda || 'N/A'}</td>
                 <td class="px-6 py-4 text-right font-semibold text-gray-800">${formatPrice(item.Precio)}</td>
                 <td class="px-6 py-4 text-right text-sm text-gray-500">${pricePerUnit}</td>
@@ -407,9 +416,9 @@
                 row.innerHTML = desktopRowHTML;
             }
             
-            createVotingUI(row.cells[4], item, 'Oferta', 'rateGood', 'rateBad');
-            createVotingUI(row.cells[5], item, 'Realidad', 'validateReal', 'validateFake');
-            createHistoryButton(row.cells[6], item);
+            createVotingUI(row.cells[6], item, 'Oferta', 'rateGood', 'rateBad');
+            createVotingUI(row.cells[7], item, 'Realidad', 'validateReal', 'validateFake');
+            createHistoryButton(row.cells[8], item);
         }
 
         function createHistoryButton(cell, item) {
@@ -503,6 +512,13 @@
             btnDown.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clip-rule="evenodd" /></svg>`;
             btnDown.className = 'action-btn bg-red-100 text-red-600 p-1 rounded-full hover:bg-red-200 ml-2';
 
+            const votedItems = JSON.parse(localStorage.getItem('votedItems')) || {};
+            const voteKey = `${scoreType}-${item.rowNum}`;
+            if (votedItems[voteKey]) {
+                btnUp.disabled = true;
+                btnDown.disabled = true;
+            }
+
             function updateScore(span, score) {
                 span.textContent = score;
                 span.classList.remove('text-indigo-600', 'text-red-600', 'text-gray-600');
@@ -515,6 +531,7 @@
             function handleVote(action) {
                 btnUp.disabled = true;
                 btnDown.disabled = true;
+
                 const payload = { action: action, rowNum: item.rowNum };
                 fetch(apiUrl, { method: 'POST', redirect: 'follow', body: JSON.stringify(payload), headers: { "Content-Type": "text/plain;charset=utf-8" }})
                 .then(res => res.json())
@@ -523,15 +540,16 @@
                         document.getElementById(`row-${item.rowNum}`)?.remove();
                     } else if (result.status === 'success') {
                         updateScore(scoreSpan, result.newCount);
+                        const votedItems = JSON.parse(localStorage.getItem('votedItems')) || {};
+                        votedItems[voteKey] = true;
+                        localStorage.setItem('votedItems', JSON.stringify(votedItems));
                     }
                 })
                 .catch(err => {
                     alert("Error al votar. Asegúrate de haber implementado la última versión del script.");
-                })
-                .finally(() => {
                     btnUp.disabled = false;
                     btnDown.disabled = false;
-                });
+                })
             }
             btnUp.onclick = () => handleVote(actionUp);
             btnDown.onclick = () => handleVote(actionDown);
